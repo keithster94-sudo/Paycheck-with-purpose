@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Builder OS">
+  <link rel="manifest" href="manifest.json">
+  <title>Builder OS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="header-top">
+      <h1 class="app-title">Builder OS</h1>
+      <div class="header-actions">
+        <button class="btn-icon" onclick="clearToday()" title="Clear Today">&#128465;</button>
+        <button class="btn-icon" onclick="exportText()" title="Export to Clipboard">&#128203;</button>
+      </div>
+    </div>
+    <div class="date-row">
+      <label for="entry-date">Date</label>
+      <input type="date" id="entry-date" onchange="loadEntry()">
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ==================== TODAY TAB ==================== -->
+    <section id="tab-today" class="tab-pane active">
+
+      <!-- Daily Builder Sheet -->
+      <div class="card">
+        <h2 class="card-title">Daily Builder Sheet</h2>
+
+        <div class="field-group">
+          <label>Sleep <span class="value-badge" id="sleep-val">5</span><span class="badge-max">/10</span></label>
+          <input type="range" id="sleep" min="1" max="10" value="5" class="slider"
+                 oninput="updateSlider('sleep')">
+          <div class="slider-labels"><span>Low</span><span>Mid</span><span>High</span></div>
+        </div>
+
+        <div class="field-group">
+          <label>Energy <span class="value-badge" id="energy-val">5</span><span class="badge-max">/10</span></label>
+          <input type="range" id="energy" min="1" max="10" value="5" class="slider"
+                 oninput="updateSlider('energy')">
+          <div class="slider-labels"><span>Low</span><span>Mid</span><span>High</span></div>
+        </div>
+
+        <div class="field-group">
+          <label>Pain <span class="value-badge" id="pain-val">1</span><span class="badge-max">/10</span></label>
+          <input type="range" id="pain" min="1" max="10" value="1" class="slider"
+                 oninput="updateSlider('pain')">
+          <div class="slider-labels"><span>None</span><span>Mid</span><span>High</span></div>
+        </div>
+
+        <div class="field-group">
+          <label>Stress <span class="value-badge" id="stress-val">5</span><span class="badge-max">/10</span></label>
+          <input type="range" id="stress" min="1" max="10" value="5" class="slider"
+                 oninput="updateSlider('stress')">
+          <div class="slider-labels"><span>Low</span><span>Mid</span><span>High</span></div>
+        </div>
+
+        <div class="field-group">
+          <label>Focus <span class="value-badge" id="focus-val">5</span><span class="badge-max">/10</span></label>
+          <input type="range" id="focus" min="1" max="10" value="5" class="slider"
+                 oninput="updateSlider('focus')">
+          <div class="slider-labels"><span>Low</span><span>Mid</span><span>High</span></div>
+        </div>
+      </div>
+
+      <!-- Capacity Check -->
+      <div class="card">
+        <h2 class="card-title">Capacity Check</h2>
+        <p class="card-subtitle">How much bandwidth do you have today?</p>
+
+        <div class="field-group">
+          <label>Capacity <span class="value-badge" id="capacity-val">50</span><span class="badge-max">%</span></label>
+          <input type="range" id="capacity" min="0" max="100" step="5" value="50" class="slider"
+                 oninput="updateSlider('capacity')">
+          <div class="slider-labels"><span>Empty</span><span>Half</span><span>Full</span></div>
+        </div>
+
+        <div class="field-group">
+          <label for="capacity-notes">Notes</label>
+          <textarea id="capacity-notes" placeholder="What's filling your plate today?" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Top 3 Priorities -->
+      <div class="card">
+        <h2 class="card-title">Top 3 Priorities</h2>
+
+        <div class="field-group">
+          <label for="priority1">Priority 1</label>
+          <input type="text" id="priority1" placeholder="Most important task today">
+        </div>
+
+        <div class="field-group">
+          <label for="priority2">Priority 2</label>
+          <input type="text" id="priority2" placeholder="Second most important">
+        </div>
+
+        <div class="field-group">
+          <label for="priority3">Priority 3</label>
+          <input type="text" id="priority3" placeholder="Third most important">
+        </div>
+      </div>
+
+      <!-- Health Check -->
+      <div class="card">
+        <h2 class="card-title">Health Check</h2>
+
+        <div class="checkbox-grid">
+          <label class="checkbox-item">
+            <input type="checkbox" id="health-water">
+            <span class="checkbox-label">Water</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="health-walk">
+            <span class="checkbox-label">Walk</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="health-stretch">
+            <span class="checkbox-label">Stretch</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="health-meals">
+            <span class="checkbox-label">Healthy Meals</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Venture Check -->
+      <div class="card">
+        <h2 class="card-title">Venture Check</h2>
+
+        <div class="checkbox-grid">
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-scg">
+            <span class="checkbox-label">SCG</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-primerica">
+            <span class="checkbox-label">Primerica</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-xosial">
+            <span class="checkbox-label">Xosial X</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-school">
+            <span class="checkbox-label">School</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-ministry">
+            <span class="checkbox-label">Ministry</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="venture-drivers">
+            <span class="checkbox-label">Driver's License</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Evening Review -->
+      <div class="card">
+        <h2 class="card-title">Evening Review</h2>
+
+        <div class="field-group">
+          <label for="win">Biggest Win</label>
+          <textarea id="win" placeholder="What went well today?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="challenge">Biggest Challenge</label>
+          <textarea id="challenge" placeholder="What was hard today?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="lesson">Lesson Learned</label>
+          <textarea id="lesson" placeholder="What did you learn?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="tomorrow-focus">Tomorrow's Focus</label>
+          <textarea id="tomorrow-focus" placeholder="What's the plan for tomorrow?" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-block">
+        <button class="btn btn-primary btn-full" onclick="saveEntry()">Save Entry</button>
+        <div class="btn-row-2">
+          <button class="btn btn-secondary" onclick="clearToday()">Clear Today</button>
+          <button class="btn btn-secondary" onclick="exportText()">Export Text</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== WEEKLY TAB ==================== -->
+    <section id="tab-weekly" class="tab-pane">
+
+      <div class="card">
+        <h2 class="card-title">Weekly Review</h2>
+
+        <div class="field-group">
+          <label for="week-date">Week of</label>
+          <input type="date" id="week-date" class="text-input" onchange="loadWeekly()">
+        </div>
+
+        <div class="field-group">
+          <label for="weekly-wins">Biggest Wins</label>
+          <textarea id="weekly-wins" placeholder="What were your biggest wins this week?" rows="4"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="weekly-challenges">Biggest Challenges</label>
+          <textarea id="weekly-challenges" placeholder="What was hard this week?" rows="4"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="faith-check">Faith Check</label>
+          <textarea id="faith-check" placeholder="How is your faith walk this week?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="weekly-health">Health Check</label>
+          <textarea id="weekly-health" placeholder="How did your health habits go?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="scg-progress">SCG Progress</label>
+          <textarea id="scg-progress" placeholder="What moved forward with SCG?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="school-progress">School Progress</label>
+          <textarea id="school-progress" placeholder="What did you accomplish at school?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="financial-progress">Financial Progress</label>
+          <textarea id="financial-progress" placeholder="What moved on the financial front?" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label for="next-week-focus">Next Week Focus</label>
+          <textarea id="next-week-focus" placeholder="What's the main focus for next week?" rows="4"></textarea>
+        </div>
+      </div>
+
+      <div class="action-block">
+        <button class="btn btn-primary btn-full" onclick="saveWeekly()">Save Weekly Review</button>
+      </div>
+
+    </section>
+
+    <!-- ==================== DASHBOARD TAB ==================== -->
+    <section id="tab-dashboard" class="tab-pane">
+
+      <div class="card dashboard-intro">
+        <h2 class="card-title">Master Dashboard</h2>
+        <p class="card-subtitle">Track progress on your major goals. Drag the slider, add notes, and save.</p>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">Driver's License</h3>
+          <span class="goal-pct" id="dash-drivers-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-drivers-bar"></div>
+        </div>
+        <input type="range" id="dash-drivers" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('drivers')">
+        <textarea id="dash-drivers-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">Project Management Certification</h3>
+          <span class="goal-pct" id="dash-pmcert-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-pmcert-bar"></div>
+        </div>
+        <input type="range" id="dash-pmcert" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('pmcert')">
+        <textarea id="dash-pmcert-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">SCG Clients</h3>
+          <span class="goal-pct" id="dash-scgclients-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-scgclients-bar"></div>
+        </div>
+        <input type="range" id="dash-scgclients" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('scgclients')">
+        <textarea id="dash-scgclients-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">Replace Job Income</h3>
+          <span class="goal-pct" id="dash-income-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-income-bar"></div>
+        </div>
+        <input type="range" id="dash-income" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('income')">
+        <textarea id="dash-income-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">Health Goal</h3>
+          <span class="goal-pct" id="dash-health-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-health-bar"></div>
+        </div>
+        <input type="range" id="dash-health" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('health')">
+        <textarea id="dash-health-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">Faith / Ministry</h3>
+          <span class="goal-pct" id="dash-ministry-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-ministry-bar"></div>
+        </div>
+        <input type="range" id="dash-ministry" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('ministry')">
+        <textarea id="dash-ministry-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="card goal-card">
+        <div class="goal-header">
+          <h3 class="goal-name">School</h3>
+          <span class="goal-pct" id="dash-school-val">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="dash-school-bar"></div>
+        </div>
+        <input type="range" id="dash-school" min="0" max="100" step="5" value="0"
+               class="slider dash-slider" oninput="updateDashSlider('school')">
+        <textarea id="dash-school-notes" class="goal-notes"
+                  placeholder="Notes, next steps, milestones..." rows="2"></textarea>
+      </div>
+
+      <div class="action-block">
+        <button class="btn btn-primary btn-full" onclick="saveDashboard()">Save Dashboard</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-today" onclick="switchTab('today')">
+      <span class="nav-icon">&#9728;</span>
+      <span class="nav-label">Today</span>
+    </button>
+    <button class="nav-btn" id="nav-weekly" onclick="switchTab('weekly')">
+      <span class="nav-icon">&#128197;</span>
+      <span class="nav-label">Weekly</span>
+    </button>
+    <button class="nav-btn" id="nav-dashboard" onclick="switchTab('dashboard')">
+      <span class="nav-icon">&#128202;</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
