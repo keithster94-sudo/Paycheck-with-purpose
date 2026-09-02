@@ -14,13 +14,18 @@ export default function Purposes() {
   const transactions = useBudgetStore((s) => s.transactions);
   const addCategory = useBudgetStore((s) => s.addCategory);
   const removeCategory = useBudgetStore((s) => s.removeCategory);
-  const spentByCategory = useMemo(() => computeSpentByCategory(transactions), [transactions]);
+  const spentByCategory = useMemo(
+    () => computeSpentByCategory(transactions, categories),
+    [transactions, categories],
+  );
   const totalIncome = useBudgetStore(selectTotalIncome);
   const totalAllocated = useBudgetStore(selectTotalAllocated);
+  const updateCategory = useBudgetStore((s) => s.updateCategory);
 
   const [name, setName] = useState('');
   const [allocated, setAllocated] = useState('');
   const [goal, setGoal] = useState('');
+  const [resetsMonthly, setResetsMonthly] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +36,12 @@ export default function Purposes() {
       name: name.trim(),
       allocated: parsedAmount,
       goal: goal.trim() && Number.isFinite(parsedGoal) && parsedGoal > 0 ? parsedGoal : undefined,
+      resetsMonthly: resetsMonthly || undefined,
     });
     setName('');
     setAllocated('');
     setGoal('');
+    setResetsMonthly(false);
   };
 
   const unallocated = totalIncome - totalAllocated;
@@ -87,6 +94,15 @@ export default function Purposes() {
             />
           </label>
           <Button type="submit">Add purpose</Button>
+          <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-full">
+            <input
+              type="checkbox"
+              checked={resetsMonthly}
+              onChange={(e) => setResetsMonthly(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-purpose-600 focus:ring-purpose-500"
+            />
+            Resets monthly — spending only counts against the current calendar month
+          </label>
         </form>
       </Card>
 
@@ -111,9 +127,30 @@ export default function Purposes() {
                 const remaining = c.allocated - spent;
                 return (
                   <tr key={c.id} className="border-b border-slate-100 last:border-0">
-                    <td className="py-2 font-medium text-slate-800">{c.name}</td>
+                    <td className="py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-slate-800">{c.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateCategory(c.id, { resetsMonthly: !c.resetsMonthly })}
+                          title="Toggle monthly auto-reset"
+                          className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                            c.resetsMonthly
+                              ? 'bg-purpose-100 text-purpose-700'
+                              : 'bg-slate-100 text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          Monthly
+                        </button>
+                      </div>
+                    </td>
                     <td className="py-2 text-right text-slate-800">{formatCurrency(c.allocated)}</td>
-                    <td className="py-2 text-right text-slate-600">{formatCurrency(spent)}</td>
+                    <td className="py-2 text-right text-slate-600">
+                      {formatCurrency(spent)}
+                      {c.resetsMonthly && (
+                        <span className="block text-[10px] font-normal text-slate-400">this month</span>
+                      )}
+                    </td>
                     <td className={`py-2 text-right font-medium ${remaining < 0 ? 'text-rose-600' : 'text-purpose-700'}`}>
                       {formatCurrency(remaining)}
                     </td>

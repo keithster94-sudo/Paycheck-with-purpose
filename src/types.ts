@@ -11,6 +11,13 @@ export interface Category {
   allocated: number;
   /** Optional savings target for this purpose, e.g. "save up to $2,000". */
   goal?: number;
+  /**
+   * When true, spending against this purpose is scoped to the current
+   * calendar month: `allocated` dollars become available again each month
+   * with no manual reset. When false/unset, spending accumulates all-time
+   * (the classic envelope-carryover model).
+   */
+  resetsMonthly?: boolean;
 }
 
 export interface Transaction {

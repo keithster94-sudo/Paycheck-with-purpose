@@ -15,7 +15,10 @@ export default function Dashboard() {
   const totalIncome = useBudgetStore(selectTotalIncome);
   const totalAllocated = useBudgetStore(selectTotalAllocated);
   const totalSpent = useBudgetStore(selectTotalSpent);
-  const spentByCategory = useMemo(() => computeSpentByCategory(transactions), [transactions]);
+  const spentByCategory = useMemo(
+    () => computeSpentByCategory(transactions, categories),
+    [transactions, categories],
+  );
 
   const unallocated = totalIncome - totalAllocated;
   const remaining = totalAllocated - totalSpent;
@@ -60,7 +63,14 @@ export default function Dashboard() {
               return (
                 <div key={category.id}>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-800">{category.name}</span>
+                    <span className="flex items-center gap-1.5 font-medium text-slate-800">
+                      {category.name}
+                      {category.resetsMonthly && (
+                        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                          Monthly
+                        </span>
+                      )}
+                    </span>
                     <span className={over ? 'text-rose-600' : 'text-slate-500'}>
                       {formatCurrency(spent)} / {formatCurrency(category.allocated)}
                     </span>

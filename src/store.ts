@@ -80,14 +80,35 @@ export const selectTotalAllocated = (state: BudgetState) =>
 export const selectTotalSpent = (state: BudgetState) =>
   state.transactions.reduce((sum, t) => sum + t.amount, 0);
 
+const isSameMonth = (isoDate: string, reference: Date) => {
+  const [year, month] = isoDate.split('-').map(Number);
+  return year === reference.getFullYear() && month === reference.getMonth() + 1;
+};
+
 /**
  * Not a zustand selector: building a Map here would return a new reference
  * on every call and break useSyncExternalStore's snapshot caching. Call this
- * from a component with useMemo, keyed on the transactions array instead.
+ * from a component with useMemo, keyed on the transactions and categories
+ * arrays instead.
+ *
+ * Categories with `resetsMonthly` only count transactions dated in the
+ * current calendar month (per `referenceDate`, default now) — that's what
+ * makes their `allocated` amount "come back" each month with no manual
+ * reset. Other categories accumulate spending all-time.
  */
-export const computeSpentByCategory = (transactions: Transaction[]) => {
+export const computeSpentByCategory = (
+  transactions: Transaction[],
+  categories: Category[],
+  referenceDate = new Date(),
+) => {
+  const resetsMonthly = new Set(
+    categories.filter((c) => c.resetsMonthly).map((c) => c.id),
+  );
   const map = new Map<string, number>();
   for (const t of transactions) {
+    if (resetsMonthly.has(t.categoryId) && !isSameMonth(t.date, referenceDate)) {
+      continue;
+    }
     map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + t.amount);
   }
   return map;
