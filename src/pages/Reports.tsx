@@ -27,10 +27,6 @@ export default function Reports() {
 
   const [period, setPeriod] = useState(previousMonthPeriod());
 
-  const resettingCategories = useMemo(
-    () => categories.filter((c) => c.resetsMonthly),
-    [categories],
-  );
   const sortedReports = useMemo(
     () => [...archivedReports].sort((a, b) => b.period.localeCompare(a.period)),
     [archivedReports],
@@ -42,17 +38,15 @@ export default function Reports() {
       <div className="print:hidden">
         <h2 className="text-xl font-semibold text-slate-900">Reports</h2>
         <p className="text-sm text-slate-500">
-          Archive a month for purposes that reset monthly, then review it as a clean expense report — on
-          screen or printed for a client session.
+          Archive a month across every purpose — spending for the month, plus each goal's running
+          progress as of that month — then review it as a clean report, on screen or printed for a
+          client session.
         </p>
       </div>
 
       <Card className="print:hidden">
-        {resettingCategories.length === 0 ? (
-          <EmptyState>
-            No purposes are set to reset monthly yet. Turn on the "Monthly" pill for a purpose on the
-            Purposes page to start archiving its spending here.
-          </EmptyState>
+        {categories.length === 0 ? (
+          <EmptyState>No purposes yet. Create one on the Purposes page to start archiving reports here.</EmptyState>
         ) : (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="text-sm">
@@ -113,21 +107,48 @@ function ReportCard({ report, onRemove }: { report: ArchivedReport; onRemove: ()
       </div>
 
       {report.categories.length === 0 ? (
-        <p className="text-sm text-slate-500">
-          No purposes were set to reset monthly when this report was archived.
-        </p>
+        <p className="text-sm text-slate-500">No purposes existed when this report was archived.</p>
       ) : (
         <div className="space-y-4">
           {report.categories.map((c) => {
             const remaining = c.allocated - c.spent;
+            const goalReached = c.goal !== undefined && c.balance >= c.goal;
+            const goalPct =
+              c.goal !== undefined
+                ? Math.max(0, Math.min(100, (c.balance / c.goal) * 100))
+                : 0;
             return (
               <div key={c.categoryId}>
                 <div className="flex items-center justify-between text-sm font-medium text-slate-800">
-                  <span>{c.categoryName}</span>
+                  <span className="flex items-center gap-1.5">
+                    {c.categoryName}
+                    {c.resetsMonthly && (
+                      <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                        Monthly
+                      </span>
+                    )}
+                  </span>
                   <span className={remaining < 0 ? 'text-rose-600' : 'text-slate-600'}>
                     {formatCurrency(c.spent)} / {formatCurrency(c.allocated)} spent
                   </span>
                 </div>
+                {c.goal !== undefined && (
+                  <div className="mt-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className={goalReached ? 'font-medium text-emerald-600' : 'text-slate-500'}>
+                        {goalReached
+                          ? 'Goal reached'
+                          : `${formatCurrency(Math.max(0, c.balance))} / ${formatCurrency(c.goal)} saved`}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full ${goalReached ? 'bg-emerald-500' : 'bg-purpose-500'}`}
+                        style={{ width: `${goalPct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 {c.transactions.length === 0 ? (
                   <p className="mt-1 text-xs text-slate-400">No transactions logged this month.</p>
                 ) : (

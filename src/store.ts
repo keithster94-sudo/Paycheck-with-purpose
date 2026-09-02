@@ -21,10 +21,11 @@ interface BudgetState {
 
   /**
    * Generates (or regenerates) an expense report for `period` ("YYYY-MM"),
-   * covering every purpose currently set to reset monthly. Locks in each
-   * purpose's name, allocated amount, and that month's transactions, so the
-   * report stays accurate even if those purposes later change. Archiving
-   * the same period again replaces the existing report for it.
+   * covering every purpose that currently exists. Locks in each purpose's
+   * name, allocated amount, that month's transactions, and its running
+   * balance as of the end of that month (for goal-progress tracking), so
+   * the report stays accurate even if those purposes later change.
+   * Archiving the same period again replaces the existing report for it.
    */
   archiveMonth: (period: string) => void;
   removeArchivedReport: (id: string) => void;
@@ -86,25 +87,32 @@ export const useBudgetStore = create<BudgetState>()(
             id: makeId(),
             period,
             createdAt: todayIso(),
-            categories: state.categories
-              .filter((c) => c.resetsMonthly)
-              .map((c) => {
-                const monthTransactions = state.transactions.filter(
-                  (t) => t.categoryId === c.id && t.date.slice(0, 7) === period,
-                );
-                return {
-                  categoryId: c.id,
-                  categoryName: c.name,
-                  allocated: c.allocated,
-                  spent: monthTransactions.reduce((sum, t) => sum + t.amount, 0),
-                  transactions: monthTransactions.map((t) => ({
-                    id: t.id,
-                    date: t.date,
-                    description: t.description,
-                    amount: t.amount,
-                  })),
-                };
-              }),
+            categories: state.categories.map((c) => {
+              const monthTransactions = state.transactions.filter(
+                (t) => t.categoryId === c.id && t.date.slice(0, 7) === period,
+              );
+              // Balance as of the END of `period`, not "now" — lets several
+              // archived months show real progress instead of repeating
+              // today's figure.
+              const spentThroughPeriod = state.transactions
+                .filter((t) => t.categoryId === c.id && t.date.slice(0, 7) <= period)
+                .reduce((sum, t) => sum + t.amount, 0);
+              return {
+                categoryId: c.id,
+                categoryName: c.name,
+                allocated: c.allocated,
+                spent: monthTransactions.reduce((sum, t) => sum + t.amount, 0),
+                transactions: monthTransactions.map((t) => ({
+                  id: t.id,
+                  date: t.date,
+                  description: t.description,
+                  amount: t.amount,
+                })),
+                resetsMonthly: c.resetsMonthly,
+                goal: c.goal,
+                balance: c.allocated - spentThroughPeriod,
+              };
+            }),
           };
           return {
             archivedReports: [

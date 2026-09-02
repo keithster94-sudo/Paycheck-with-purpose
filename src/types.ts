@@ -43,13 +43,27 @@ export interface ArchivedCategoryReport {
   categoryName: string;
   /** Snapshot of the purpose's allocated amount at archive time. */
   allocated: number;
+  /** This purpose's spending dated within the archived month only. */
   spent: number;
   transactions: ArchivedTransaction[];
+  /** Snapshot of whether this purpose was set to reset monthly at archive time. */
+  resetsMonthly?: boolean;
+  /** Snapshot of the purpose's goal target, if any, at archive time. */
+  goal?: number;
+  /**
+   * The purpose's running balance (allocated - all-time spent) as of the
+   * END of the archived month specifically — not "now" — so archiving
+   * several consecutive months produces a true month-over-month progress
+   * trail toward `goal` instead of the same current figure repeated.
+   */
+  balance: number;
 }
 
 /**
  * A generated expense report for one calendar month, covering every purpose
- * that was set to reset monthly at archive time. Created via
+ * that existed at archive time — both spending that month and, for any
+ * purpose with a goal, its running balance as of that month (a progress
+ * checkpoint you can compare across archived months). Created via
  * `useBudgetStore().archiveMonth(period)` and meant to be reviewed with a
  * client — see Reports.tsx.
  */
