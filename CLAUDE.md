@@ -22,7 +22,7 @@ There is no test suite yet.
 
 - **Stack:** Vite + React 19 + TypeScript, React Router (client-side routing), Zustand (state + `persist` middleware for `localStorage`), Tailwind CSS v4 (via `@tailwindcss/vite`).
 - **No backend.** All data lives client-side in `localStorage` under the key `paycheck-with-purpose`. There is no API layer or server.
-- **Data model** (`src/types.ts`): `Paycheck` (income entries), `Category` (a "purpose"/envelope with a name and an allocated amount), `Transaction` (a spend against a `Category`).
+- **Data model** (`src/types.ts`): `Paycheck` (income entries), `Category` (a "purpose"/envelope with a name, an allocated amount, and an optional `goal` savings target), `Transaction` (a spend against a `Category`).
 - **Store** (`src/store.ts`): a single Zustand store (`useBudgetStore`) holding `paychecks`, `categories`, `transactions` plus CRUD actions. Derived totals (`selectTotalIncome`, `selectTotalAllocated`, `selectTotalSpent`) are plain selector functions safe to pass directly to `useBudgetStore`.
   - `computeSpentByCategory` is **not** a store selector — it builds a `Map` and must be called from a component wrapped in `useMemo` (keyed on the `transactions` array). Passing it directly to `useBudgetStore` returns a new object reference every render and breaks `useSyncExternalStore`'s snapshot caching, causing an infinite render loop (this happened once during scaffolding — see `Dashboard.tsx` / `Purposes.tsx` for the correct pattern).
 - **Pages** (`src/pages/`): `Dashboard` (zero-based budgeting summary + per-purpose progress bars), `Paychecks`, `Purposes` (create/manage envelopes), `Transactions` (log spend against a purpose).
@@ -36,3 +36,4 @@ There is no test suite yet.
 - Dates are stored as ISO date strings (`YYYY-MM-DD`); format for display with `formatDate`.
 - New Zustand selectors that need to derive a new object/array/Map should follow the `computeSpentByCategory` pattern (plain function + `useMemo` in the component) rather than being passed directly as a store selector, to avoid the snapshot-caching infinite-loop trap above.
 - Styling is Tailwind utility classes; the custom `purpose-*` color scale is defined in `src/index.css` via `@theme`.
+- A `Category.goal` is an optional savings target (e.g. "Emergency fund: save up to $2,000"), separate from `allocated` (the per-envelope funding amount). Its progress tracker on the Purposes page uses the envelope's running balance (`allocated - spent`) as "amount saved so far," not a per-period reset value.

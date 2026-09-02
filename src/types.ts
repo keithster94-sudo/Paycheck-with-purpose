@@ -9,6 +9,8 @@ export interface Category {
   id: string;
   name: string;
   allocated: number;
+  /** Optional savings target for this purpose, e.g. "save up to $2,000". */
+  goal?: number;
 }
 
 export interface Transaction {
