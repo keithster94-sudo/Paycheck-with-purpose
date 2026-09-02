@@ -88,13 +88,34 @@ const isSameMonth = (isoDate: string, reference: Date) => {
 /**
  * Not a zustand selector: building a Map here would return a new reference
  * on every call and break useSyncExternalStore's snapshot caching. Call this
+ * from a component with useMemo, keyed on the transactions array instead.
+ *
+ * Always sums all-time, ignoring `resetsMonthly` — this is the "money ever
+ * put toward this purpose" figure a savings goal's progress bar should use,
+ * so goal progress never resets even for a purpose whose Spent/Remaining
+ * columns do (see computeSpentByCategory below).
+ */
+export const computeAllTimeSpentByCategory = (transactions: Transaction[]) => {
+  const map = new Map<string, number>();
+  for (const t of transactions) {
+    map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + t.amount);
+  }
+  return map;
+};
+
+/**
+ * Not a zustand selector: building a Map here would return a new reference
+ * on every call and break useSyncExternalStore's snapshot caching. Call this
  * from a component with useMemo, keyed on the transactions and categories
  * arrays instead.
  *
  * Categories with `resetsMonthly` only count transactions dated in the
  * current calendar month (per `referenceDate`, default now) — that's what
  * makes their `allocated` amount "come back" each month with no manual
- * reset. Other categories accumulate spending all-time.
+ * reset. Other categories accumulate spending all-time. This drives the
+ * Spent/Remaining columns; goal progress deliberately uses
+ * computeAllTimeSpentByCategory instead so it isn't affected by the
+ * monthly reset.
  */
 export const computeSpentByCategory = (
   transactions: Transaction[],

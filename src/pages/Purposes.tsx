@@ -3,6 +3,7 @@ import type { Category } from '../types';
 import { Button, Card, EmptyState, IconButton, Input } from '../components/ui';
 import { formatCurrency } from '../lib/format';
 import {
+  computeAllTimeSpentByCategory,
   computeSpentByCategory,
   selectTotalAllocated,
   selectTotalIncome,
@@ -17,6 +18,12 @@ export default function Purposes() {
   const spentByCategory = useMemo(
     () => computeSpentByCategory(transactions, categories),
     [transactions, categories],
+  );
+  // Goal progress always tracks the all-time balance, even for purposes that
+  // reset monthly — only their Spent/Remaining columns should reset.
+  const allTimeSpentByCategory = useMemo(
+    () => computeAllTimeSpentByCategory(transactions),
+    [transactions],
   );
   const totalIncome = useBudgetStore(selectTotalIncome);
   const totalAllocated = useBudgetStore(selectTotalAllocated);
@@ -125,6 +132,8 @@ export default function Purposes() {
               {categories.map((c) => {
                 const spent = spentByCategory.get(c.id) ?? 0;
                 const remaining = c.allocated - spent;
+                const allTimeSpent = allTimeSpentByCategory.get(c.id) ?? 0;
+                const goalBalance = c.allocated - allTimeSpent;
                 return (
                   <tr key={c.id} className="border-b border-slate-100 last:border-0">
                     <td className="py-2">
@@ -155,7 +164,7 @@ export default function Purposes() {
                       {formatCurrency(remaining)}
                     </td>
                     <td className="py-2 text-right">
-                      <GoalCell category={c} balance={remaining} />
+                      <GoalCell category={c} balance={goalBalance} />
                     </td>
                     <td className="py-2 text-right">
                       <IconButton onClick={() => removeCategory(c.id)}>Remove</IconButton>
