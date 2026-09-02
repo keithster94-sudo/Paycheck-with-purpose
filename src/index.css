@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-purpose-50: #f2f8f6;
+  --color-purpose-100: #dceee7;
+  --color-purpose-200: #b7ddd0;
+  --color-purpose-300: #8bc4b1;
+  --color-purpose-400: #5da690;
+  --color-purpose-500: #408a75;
+  --color-purpose-600: #316f5e;
+  --color-purpose-700: #2a594d;
+  --color-purpose-800: #24483f;
+  --color-purpose-900: #203c35;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
