@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Paychecks from './pages/Paychecks';
 import Purposes from './pages/Purposes';
+import Reports from './pages/Reports';
 import Transactions from './pages/Transactions';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/paychecks" element={<Paychecks />} />
         <Route path="/purposes" element={<Purposes />} />
         <Route path="/transactions" element={<Transactions />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </Layout>
   );

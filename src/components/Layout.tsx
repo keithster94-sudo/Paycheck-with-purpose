@@ -6,12 +6,13 @@ const navItems = [
   { to: '/paychecks', label: 'Paychecks' },
   { to: '/purposes', label: 'Purposes' },
   { to: '/transactions', label: 'Transactions' },
+  { to: '/reports', label: 'Reports' },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-white print:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
           <div>
             <h1 className="text-lg font-semibold text-purpose-900">
