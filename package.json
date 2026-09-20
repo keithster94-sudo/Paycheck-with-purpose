@@ -1,0 +1,14 @@
+{
+  "name": "warehouse-storage-layout",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "test": "npm test --workspace server",
+    "seed": "npm run seed --workspace server"
+  }
+}
