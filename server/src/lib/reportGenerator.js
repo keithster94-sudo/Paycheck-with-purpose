@@ -22,6 +22,7 @@ export function buildAccountabilityReport({ since, until }) {
       user,
       SUM(CASE WHEN type = 'move' THEN 1 ELSE 0 END) AS moves,
       SUM(CASE WHEN type = 'consolidate' THEN 1 ELSE 0 END) AS consolidations,
+      SUM(CASE WHEN type = 'split' THEN 1 ELSE 0 END) AS splits,
       SUM(CASE WHEN type = 'create' THEN 1 ELSE 0 END) AS bins_created,
       SUM(CASE WHEN type = 'task_complete' THEN 1 ELSE 0 END) AS tasks_completed,
       COUNT(*) AS total_actions
@@ -35,12 +36,13 @@ export function buildAccountabilityReport({ since, until }) {
     (acc, row) => {
       acc.moves += row.moves;
       acc.consolidations += row.consolidations;
+      acc.splits += row.splits;
       acc.bins_created += row.bins_created;
       acc.tasks_completed += row.tasks_completed;
       acc.total_actions += row.total_actions;
       return acc;
     },
-    { moves: 0, consolidations: 0, bins_created: 0, tasks_completed: 0, total_actions: 0 }
+    { moves: 0, consolidations: 0, splits: 0, bins_created: 0, tasks_completed: 0, total_actions: 0 }
   );
 
   const events = db.prepare(`

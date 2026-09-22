@@ -26,20 +26,21 @@ function AccountabilityTable({ report }) {
   return (
     <table className="report-table">
       <thead>
-        <tr><th>User</th><th>Moves</th><th>Consolidations</th><th>Bins created</th><th>Tasks done</th><th>Total actions</th></tr>
+        <tr><th>User</th><th>Moves</th><th>Splits</th><th>Consolidations</th><th>Bins created</th><th>Tasks done</th><th>Total actions</th></tr>
       </thead>
       <tbody>
         {report.byUser.map((u) => (
           <tr key={u.user}>
             <td>{u.user}</td>
             <td>{u.moves}</td>
+            <td>{u.splits}</td>
             <td>{u.consolidations}</td>
             <td>{u.bins_created}</td>
             <td>{u.tasks_completed}</td>
             <td>{u.total_actions}</td>
           </tr>
         ))}
-        {report.byUser.length === 0 && <tr><td colSpan={6} className="muted">No activity in this period.</td></tr>}
+        {report.byUser.length === 0 && <tr><td colSpan={7} className="muted">No activity in this period.</td></tr>}
       </tbody>
     </table>
   );

@@ -38,6 +38,8 @@ function AddBinForm({ location, user, onDone }) {
 function BinActions({ item, locations, user, onDone }) {
   const [moveTarget, setMoveTarget] = useState('');
   const [mergeSource, setMergeSource] = useState('');
+  const [splitTarget, setSplitTarget] = useState('');
+  const [splitQty, setSplitQty] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -45,6 +47,13 @@ function BinActions({ item, locations, user, onDone }) {
   const sameSkuElsewhere = locations
     .flatMap((l) => l.occupants.map((o) => ({ ...o, locationLabel: l.label })))
     .filter((o) => o.sku === item.sku && o.id !== item.id);
+
+  // Valid split destinations: anywhere with a free slot (a new bin can start there),
+  // plus anywhere already holding this SKU (the split quantity merges in, no slot needed).
+  const splitTargets = locations
+    .filter((l) => l.id !== item.location_id)
+    .map((l) => ({ location: l, existing: l.occupants.find((o) => o.sku === item.sku) }))
+    .filter(({ location: l, existing }) => l.free_slots > 0 || existing);
 
   async function doMove() {
     if (!moveTarget) return;
@@ -66,6 +75,23 @@ function BinActions({ item, locations, user, onDone }) {
     setError(null);
     try {
       await api.consolidate({ sourceItemIds: [mergeSource], targetItemId: item.id, user });
+      onDone();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doSplit() {
+    const qty = Number(splitQty);
+    if (!splitTarget || !qty || qty <= 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await api.splitItem({ itemId: item.id, quantity: qty, toLocationId: splitTarget, user });
+      setSplitQty('');
+      setSplitTarget('');
       onDone();
     } catch (err) {
       setError(err.message);
@@ -104,6 +130,32 @@ function BinActions({ item, locations, user, onDone }) {
         </label>
         <button onClick={doConsolidate} disabled={!mergeSource || busy}>Consolidate</button>
         {sameSkuElsewhere.length === 0 && <div className="muted small">No other bins with this SKU to consolidate.</div>}
+      </div>
+
+      <div className="action-block">
+        <label>Split off qty
+          <input
+            type="number"
+            min="1"
+            max={item.quantity - 1}
+            placeholder={`1-${item.quantity - 1}`}
+            value={splitQty}
+            onChange={(e) => setSplitQty(e.target.value)}
+            disabled={item.quantity <= 1}
+          />
+        </label>
+        <label>Send to
+          <select value={splitTarget} onChange={(e) => setSplitTarget(e.target.value)} disabled={item.quantity <= 1}>
+            <option value="">Select destination...</option>
+            {splitTargets.map(({ location: l, existing }) => (
+              <option key={l.id} value={l.id}>
+                {existing ? `${l.label} — merges into ${existing.id} (×${existing.quantity})` : `${l.label} (${l.free_slots} free)`}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button onClick={doSplit} disabled={!splitTarget || !splitQty || busy || item.quantity <= 1}>Split</button>
+        <div className="muted small">Leaves the rest of this bin in place — for pulling part of a pallet to a flow rack or another zone.</div>
       </div>
 
       {error && <div className="error-text">{error}</div>}

@@ -119,6 +119,100 @@ export function moveItem({ itemId, toLocationId, user, reason }) {
 }
 
 /**
+ * Move part of a bin's quantity to another location, leaving the remainder in
+ * place — e.g. pulling 10 units off a 42-unit pallet to top up a flow rack
+ * lane without disturbing the rest of the pallet. If a bin with the same SKU
+ * is already active at the destination, the split quantity merges into it;
+ * otherwise a new bin is created there. The source bin keeps whatever
+ * quantity remains, or closes out (like a full move) if split all the way.
+ */
+export function splitItem({ itemId, quantity, toLocationId, user, note }) {
+  const source = db.prepare(`SELECT * FROM items WHERE id = ? AND status = 'active'`).get(itemId);
+  if (!source) throw new WarehouseError(`Unknown active item: ${itemId}`, 404);
+
+  const splitQty = Number(quantity);
+  if (!Number.isInteger(splitQty) || splitQty <= 0) {
+    throw new WarehouseError('quantity must be a positive integer', 400);
+  }
+  if (splitQty > source.quantity) {
+    throw new WarehouseError(`Cannot split ${splitQty} units — bin only has ${source.quantity}`, 409);
+  }
+
+  const destination = getLocation(toLocationId);
+  if (destination.id === source.location_id) {
+    throw new WarehouseError('Choose a different destination than the current location', 409);
+  }
+
+  const existingAtDestination = db
+    .prepare(`SELECT * FROM items WHERE location_id = ? AND sku = ? AND status = 'active'`)
+    .get(toLocationId, source.sku);
+
+  if (!existingAtDestination && occupantCount(toLocationId) >= destination.depth) {
+    throw new WarehouseError(`Destination ${toLocationId} is full`, 409);
+  }
+
+  const remaining = source.quantity - splitQty;
+  let destinationItemId;
+
+  const run = db.transaction(() => {
+    if (remaining > 0) {
+      db.prepare(`
+        UPDATE items SET quantity = @remaining, updated_at = datetime('now') WHERE id = @itemId
+      `).run({ remaining, itemId });
+    } else {
+      db.prepare(`
+        UPDATE items SET status = 'consolidated_out', updated_at = datetime('now') WHERE id = @itemId
+      `).run({ itemId });
+    }
+
+    if (existingAtDestination) {
+      const newQuantity = existingAtDestination.quantity + splitQty;
+      db.prepare(`
+        UPDATE items SET quantity = @newQuantity, updated_at = datetime('now') WHERE id = @id
+      `).run({ newQuantity, id: existingAtDestination.id });
+      destinationItemId = existingAtDestination.id;
+    } else {
+      destinationItemId = `BIN-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+      const slotIndex = nextSlotIndex(toLocationId);
+      db.prepare(`
+        INSERT INTO items (id, sku, description, quantity, lot, location_id, slot_index)
+        VALUES (@id, @sku, @description, @quantity, @lot, @locationId, @slotIndex)
+      `).run({
+        id: destinationItemId,
+        sku: source.sku,
+        description: source.description,
+        quantity: splitQty,
+        lot: source.lot,
+        locationId: toLocationId,
+        slotIndex,
+      });
+    }
+
+    logActivity({
+      type: 'split',
+      itemId,
+      fromLocationId: source.location_id,
+      toLocationId,
+      user,
+      detail: {
+        sku: source.sku,
+        splitQty,
+        remaining,
+        destinationItemId,
+        mergedIntoExisting: Boolean(existingAtDestination),
+        note: note || null,
+      },
+    });
+  });
+  run();
+
+  return {
+    source: db.prepare('SELECT * FROM items WHERE id = ?').get(itemId),
+    destination: db.prepare('SELECT * FROM items WHERE id = ?').get(destinationItemId),
+  };
+}
+
+/**
  * Consolidate several source bins into a target bin: quantities are summed onto
  * the target, source bins are closed out (freeing their slots), and the merge is logged
  * for accountability. All items must share the same SKU.

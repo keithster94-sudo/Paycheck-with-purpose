@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { moveItem, consolidateItems, listActivity, WarehouseError } from '../lib/warehouse.js';
+import { moveItem, consolidateItems, splitItem, listActivity, WarehouseError } from '../lib/warehouse.js';
 
 export const movesRouter = Router();
 
@@ -25,6 +25,20 @@ movesRouter.post('/consolidate', (req, res) => {
   try {
     const item = consolidateItems({ sourceItemIds, targetItemId, user, note });
     res.json({ item });
+  } catch (err) {
+    if (err instanceof WarehouseError) return res.status(err.status).json({ error: err.message });
+    throw err;
+  }
+});
+
+movesRouter.post('/split', (req, res) => {
+  const { itemId, quantity, toLocationId, user, note } = req.body || {};
+  if (!itemId || !toLocationId || quantity == null) {
+    return res.status(400).json({ error: 'itemId, quantity, and toLocationId are required' });
+  }
+  try {
+    const result = splitItem({ itemId, quantity, toLocationId, user, note });
+    res.json(result);
   } catch (err) {
     if (err instanceof WarehouseError) return res.status(err.status).json({ error: err.message });
     throw err;

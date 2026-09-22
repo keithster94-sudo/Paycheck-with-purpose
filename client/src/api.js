@@ -17,6 +17,7 @@ export const api = {
   createItem: (payload) => request('/items', { method: 'POST', body: JSON.stringify(payload) }),
   moveItem: (payload) => request('/moves', { method: 'POST', body: JSON.stringify(payload) }),
   consolidate: (payload) => request('/consolidate', { method: 'POST', body: JSON.stringify(payload) }),
+  splitItem: (payload) => request('/split', { method: 'POST', body: JSON.stringify(payload) }),
   getActivity: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/activity${qs ? `?${qs}` : ''}`);

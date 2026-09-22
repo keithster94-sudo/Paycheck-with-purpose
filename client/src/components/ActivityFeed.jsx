@@ -7,6 +7,8 @@ function describe(entry) {
       return `${entry.user} moved ${entry.item_id} from ${entry.from_location_id} to ${entry.to_location_id}${detail.reason ? ` (${detail.reason})` : ''}`;
     case 'consolidate':
       return `${entry.user} consolidated ${(detail.mergedFrom || []).map((m) => m.id).join(', ')} into ${entry.item_id} (now ${detail.resultingQuantity})`;
+    case 'split':
+      return `${entry.user} split ${detail.splitQty} of ${entry.item_id} (${detail.sku}) from ${entry.from_location_id} to ${entry.to_location_id}${detail.mergedIntoExisting ? ` (merged into ${detail.destinationItemId})` : ` (new bin ${detail.destinationItemId})`} — ${detail.remaining} left at source`;
     case 'create':
       return `${entry.user} added ${entry.item_id} (${detail.sku} x${detail.quantity}) at ${entry.to_location_id}`;
     case 'task_complete':
